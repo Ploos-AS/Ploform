@@ -58,3 +58,7 @@ submissions at application or browser level.
 ## Development-only key resolver
 
 `backend/internal/secureforms/keyring.go` implements an in-memory resolver that binds a globally unique key ID to one organization. It copies key bytes on registration and retrieval and rejects cross-organization lookups. This is **not production key management**: keys disappear on restart, are resident in process memory, have no rotation or recovery, and the resolver does not authenticate callers. Do not expose it through HTTP or use it to protect real submissions. Before deployment, implement an external KMS/HSM or audited envelope key management system with authorization, per-organization key isolation, backup/recovery, audit logging, key rotation and documented failure behavior. Tests have been written but not executed.
+
+## Pluggable key provider boundary
+
+`backend/internal/secureforms/provider.go` defines `KeyProvider.ResolveKey(ctx, organizationID, keyID)` and encryption/decryption helpers. The only adapter currently implemented is `MemoryKeyProvider`, backed by the development-only in-memory keyring. No KMS integration exists yet. Providers must enforce authorization and tenant isolation independently; a caller-provided organization ID is not proof of authorization. The helpers clear the copied key bytes after use, but Go memory copies and runtime behavior prevent any guarantee of complete key erasure. Provider tests are written but not yet executed.
