@@ -23,6 +23,8 @@ SELECT id, 'visible-workspace', 'Visible' FROM test_ids WHERE label = 'org_a';
 INSERT INTO workspaces (organization_id, slug, name)
 SELECT id, 'hidden-workspace', 'Hidden' FROM test_ids WHERE label = 'org_b';
 
+SELECT set_config('test.org_a', (SELECT id::text FROM test_ids WHERE label = 'org_a'), true);
+SELECT set_config('test.org_b', (SELECT id::text FROM test_ids WHERE label = 'org_b'), true);
 SET LOCAL ROLE ploform_auth;
 DO $$
 DECLARE n integer;
@@ -32,20 +34,20 @@ BEGIN
  JOIN organization_memberships m ON m.user_id = s.user_id
  WHERE s.token_digest = decode(repeat('cd', 32), 'hex')
    AND s.revoked_at IS NULL AND s.expires_at > now()
-   AND m.organization_id = (SELECT id FROM test_ids WHERE label = 'org_a');
+   AND m.organization_id = current_setting('test.org_a')::uuid;
  IF n != 1 THEN RAISE EXCEPTION 'valid session/membership not resolved'; END IF;
 
  SELECT count(*) INTO n
  FROM sessions s
  JOIN organization_memberships m ON m.user_id = s.user_id
  WHERE s.token_digest = decode(repeat('cd', 32), 'hex')
-   AND m.organization_id = (SELECT id FROM test_ids WHERE label = 'org_b');
+   AND m.organization_id = current_setting('test.org_b')::uuid;
  IF n != 0 THEN RAISE EXCEPTION 'cross-organization membership exposed'; END IF;
 END $$;
 RESET ROLE;
 
 SET LOCAL ROLE ploform_app;
-SELECT set_config('app.organization_id', (SELECT id::text FROM test_ids WHERE label = 'org_a'), true);
+SELECT set_config('app.organization_id', current_setting('test.org_a'), true);
 DO $$
 DECLARE n integer;
 BEGIN
