@@ -48,5 +48,30 @@ BEGIN
   RAISE EXCEPTION 'failed contact form was not rolled back';
  END IF;
 END $$;
+-- Publication: only a versioned draft can transition to published.
+INSERT INTO forms (organization_id, workspace_id, slug, title)
+VALUES (:'org_id', :'workspace_id', 'unversioned', 'Unversioned');
+UPDATE forms SET status='published'
+WHERE organization_id=:'org_id' AND id=:'form_id'
+  AND status='draft'
+  AND EXISTS (SELECT 1 FROM form_versions
+              WHERE organization_id=:'org_id' AND form_id=:'form_id');
+DO $
+BEGIN
+ IF (SELECT status FROM forms WHERE slug='contact') <> 'published' THEN
+  RAISE EXCEPTION 'versioned contact form was not published';
+ END IF;
+ IF (SELECT status FROM forms WHERE slug='unversioned') <> 'draft' THEN
+  RAISE EXCEPTION 'unversioned form was published';
+ END IF;
+END $;
+-- Repeated publication must not change the already-published form.
+UPDATE forms SET status='published'
+WHERE organization_id=:'org_id' AND id=:'form_id' AND status='draft';
+DO $
+BEGIN
+ IF FOUND THEN RAISE EXCEPTION 'published form accepted duplicate transition'; END IF;
+END $;
+
 ROLLBACK;
-\echo 'Transactional contact form persistence checks passed'
+\echo 'Transactional contact form persistence and publication checks passed'
