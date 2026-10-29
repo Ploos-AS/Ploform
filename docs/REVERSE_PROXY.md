@@ -4,7 +4,7 @@
 
 ## Current state
 
-The repository has a development-only PostgreSQL Compose service and a Go API bound to loopback by default. There is **no production-ready Docker image, Compose application service, Caddy integration or supported public deployment** yet. `deploy/caddy/Caddyfile.example` is an illustrative template, not a ready-to-deploy configuration.
+The repository has a development-only PostgreSQL Compose service and a Go API bound to loopback by default. There is **no production-ready Docker image or supported public deployment** yet. An internal-only Caddy/API/PostgreSQL Compose scaffold is available for development; it deliberately does not publish ports or provision application database roles. `deploy/caddy/Caddyfile.example` is an illustrative template, not a ready-to-deploy configuration.
 
 ## Required proxy contract
 
@@ -29,3 +29,7 @@ The repository has a development-only PostgreSQL Compose service and a Go API bo
 ## Current implementation caveat
 
 The trusted-proxy allowlist is applied to the same-origin guard for unsafe requests, not as a global authentication or host-validation mechanism. The application does not currently provide a production-ready Caddy Compose stack. The public Host allowlist remains the reverse proxy's responsibility. Never rely on `X-Forwarded-For` for caller identity. Tests are written but not executed.
+
+## Internal-only Compose scaffold
+
+Run `PLOFORM_DEV_POSTGRES_PASSWORD=<strong-development-password> docker compose -f deploy/compose.proxy.dev.yaml up --build` from the repository root. The scaffold starts PostgreSQL, an API without database credentials, and an internal Caddy HTTP proxy. It does **not** initialize database migrations or make the API ready for real submissions. It publishes no host ports. The proxy has a fixed Docker IP, which is configured as the only trusted non-loopback direct peer for the API's unsafe-method origin guard. The private network subnet must not overlap existing Docker networks. The internal Caddyfile is deliberately HTTP-only for smoke testing; it must never be reused for public traffic. No deployment test has been run yet.
