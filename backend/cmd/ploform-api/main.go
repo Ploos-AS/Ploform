@@ -7,12 +7,22 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/Ploos-AS/Ploform/backend/internal/authz"
+	"github.com/Ploos-AS/Ploform/backend/internal/session"
+	"github.com/Ploos-AS/Ploform/backend/internal/store"
 )
 
 func handler() http.Handler { return handlerWithDB(nil) }
 
-func handlerWithDB(db *sql.DB) http.Handler {
+func handlerWithDB(db *sql.DB) http.Handler { return handlerWithDatabases(db, nil) }
+
+func handlerWithDatabases(db, authDB *sql.DB) http.Handler {
 	mux := http.NewServeMux()
+	if db != nil && authDB != nil {
+		a := authz.Authorizer{Sessions: session.Repository{DB: authDB}, Memberships: authz.MembershipRepository{DB: authDB}}
+		mux.Handle("GET /api/organizations/{organizationID}/workspaces", workspaceRoutes(a, store.Store{DB: db}))
+	}
 	mux.Handle("GET /readyz", readinessHandler(db))
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -38,9 +48,21 @@ func main() {
 		}
 		defer db.Close()
 	}
+	var authDB *sql.DB
+	if os.Getenv("PLOFORM_AUTH_DATABASE_URL") != "" {
+		if db == nil {
+			log.Fatal("authentication requires PLOFORM_DATABASE_URL")
+		}
+		var err error
+		authDB, err = connectAuthDatabase(context.Background())
+		if err != nil {
+			log.Fatalf("authentication database startup check failed: %v", err)
+		}
+		defer authDB.Close()
+	}
 	server := &http.Server{
 		Addr:              addr,
-		Handler:           handlerWithDB(db),
+		Handler:           handlerWithDatabases(db, authDB),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 	log.Printf("Ploform development API listening on %s", addr)
