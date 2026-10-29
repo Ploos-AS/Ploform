@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -21,6 +22,15 @@ func main() {
 	addr := os.Getenv("PLOFORM_LISTEN_ADDR")
 	if addr == "" {
 		addr = "127.0.0.1:8080"
+	}
+	// No administrative endpoints exist yet. Fail closed when a database
+	// is configured but unavailable, rather than starting a degraded service.
+	if os.Getenv("PLOFORM_DATABASE_URL") != "" {
+		db, err := connectDatabase(context.Background())
+		if err != nil {
+			log.Fatalf("database startup check failed: %v", err)
+		}
+		defer db.Close()
 	}
 	server := &http.Server{
 		Addr:              addr,
