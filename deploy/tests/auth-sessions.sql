@@ -6,9 +6,10 @@ INSERT INTO organizations(slug,name) VALUES ('auth-test-' || substr(gen_random_u
 INSERT INTO organization_memberships(organization_id,user_id,role) VALUES (:'org_id',:'user_id','viewer');
 INSERT INTO sessions(user_id,token_digest,expires_at) VALUES
  (:'user_id',digest('active-auth-test','sha256'),now()+interval '1 hour'),
- (:'user_id',digest('expired-auth-test','sha256'),now()-interval '1 hour'),
+ (:'user_id',digest('expired-auth-test','sha256'),now()+interval '1 second'),
  (:'user_id',digest('revoked-auth-test','sha256'),now()+interval '1 hour');
 UPDATE sessions SET revoked_at=now() WHERE token_digest=digest('revoked-auth-test','sha256');
+SELECT pg_sleep(2);
 SET LOCAL ROLE ploform_auth;
 SELECT CASE WHEN count(*)=1 THEN 'true' ELSE 'false' END AS active_ok FROM sessions
  WHERE user_id=:'user_id' AND revoked_at IS NULL AND expires_at>now() \gset
