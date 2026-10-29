@@ -32,6 +32,7 @@ psql -v ON_ERROR_STOP=1 -f backend/migrations/000002_app_role.up.sql
 psql -v ON_ERROR_STOP=1 -f backend/migrations/000003_identity.up.sql
 psql -v ON_ERROR_STOP=1 -f backend/migrations/000004_sessions.up.sql
 psql -v ON_ERROR_STOP=1 -f backend/migrations/000005_auth_role.up.sql
+psql -v ON_ERROR_STOP=1 -f backend/migrations/000006_login_challenges.up.sql
 psql -v ON_ERROR_STOP=1 -f backend/tests/auth_role_isolation.sql
 psql -v ON_ERROR_STOP=1 -f backend/tests/tenant_isolation.sql
 psql -v ON_ERROR_STOP=1 -f backend/tests/workspace_access.sql
