@@ -66,3 +66,7 @@ submissions at application or browser level.
 ## Database schema (migration 000007)
 
 `submissions` now supports an optional versioned JSON encryption envelope and an `encryption_mode` discriminator. Sensitive and confidential modes require an envelope and an empty legacy `response_json` object. The database validates envelope shape, **not** ciphertext authenticity or the relationship between a key and its organization. Those checks must be performed by the future authorized application layer and key provider. Existing standard-mode rows are unchanged. No encrypted-submission HTTP endpoints exist yet. SQL regression tests are written but not executed.
+
+## Internal encrypted submission persistence
+
+`backend/internal/store/encrypted_submissions.go` introduces `SaveSensitiveSubmission`, which encrypts a supplied payload before opening a tenant-scoped database transaction. It inserts an AES-256-GCM envelope into `submissions.encrypted_payload` and an empty object into `response_json`. The INSERT joins the authorized organization, form and form version to prevent mismatched authenticated context. The method is **not exposed through HTTP** and relies on the caller having verified authorization and on a secure external key provider, neither of which is currently wired. There is no submission read/decrypt path yet. This code and its database integration have not been test-executed.
