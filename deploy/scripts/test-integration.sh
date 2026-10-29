@@ -12,3 +12,6 @@ printf '\n==> PostgreSQL contact form persistence integration tests\n'
 docker compose -f deploy/compose.proxy.dev.yaml exec -T postgres \
   psql -X -U ploform_dev -d ploform -v ON_ERROR_STOP=1 \
   -f /dev/stdin < deploy/tests/contact-form.sql
+
+printf '\n==> Public HTTP submission end-to-end integration tests\n'
+sh deploy/scripts/test-http-submission.sh
