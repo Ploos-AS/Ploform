@@ -21,3 +21,7 @@ methods. It is **not sufficient alone** for a production deployment:
 - Test login, authorization and CSRF end to end before enabling writes.
 
 The server currently exposes health checks and guarded API endpoints in development mode. No login endpoint exists. Do not expose it publicly before a full deployment security review.
+
+## CSRF token primitives
+
+`internal/httpauth/csrf_token.go` now implements randomized HMAC-SHA256 tokens bound to the session secret. This is a primitive, not yet active endpoint protection. Before any write API is considered ready, wire token issuance to a validated session, require a token header on unsafe requests, and combine validation with the same-origin guard. Tokens must not be logged or placed in URLs. The token tests are written but not yet executed.
