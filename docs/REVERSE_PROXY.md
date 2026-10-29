@@ -11,7 +11,7 @@ The repository has a development-only PostgreSQL Compose service and a Go API bo
 - Terminate TLS with a trusted certificate and redirect HTTP to HTTPS.
 - Allowlist the intended public hostname; reject unknown Host headers.
 - Set `PLOFORM_PUBLIC_ORIGIN` to the exact external HTTPS origin (scheme, hostname and optional port).
-- Forward requests to a **loopback-only** Go API on the same host. Current same-origin guard rejects non-TLS upstream requests from non-loopback remote IPs. A container-to-container proxy network **does not work with this restriction** without a reviewed trusted-proxy mechanism.
+- Forward requests to a **loopback-only** Go API on the same host. The same-origin guard accepts non-TLS upstream requests from loopback or exact peer IPs configured in `PLOFORM_TRUSTED_PROXY_IPS` (comma-separated `/32` IPv4 or `/128` IPv6 addresses). The API validates this setting at startup. **This is only a direct-peer check, not a complete container-network security solution.** Docker container IPs can change; the deployment must pin or securely discover the proxy IP and isolate the API network from untrusted containers. Do not expose the upstream port publicly.
 - Do not expose PostgreSQL, the internal API port, or administrative endpoints directly.
 - Set body-size and request-time limits, rate limits and appropriate access logging without recording form contents or credentials.
 - Never treat client-supplied `Forwarded` / `X-Forwarded-*` headers as trustworthy unless a specific trusted-proxy implementation strips and validates them.
@@ -25,3 +25,7 @@ The repository has a development-only PostgreSQL Compose service and a Go API bo
 4. Add end-to-end proxy tests before declaring any public deployment supported.
 
 **Do not expose Ploform to the public Internet yet.** Login and other security-critical features remain unfinished.
+
+## Current implementation caveat
+
+The trusted-proxy allowlist is applied to the same-origin guard for unsafe requests, not as a global authentication or host-validation mechanism. The application does not currently provide a production-ready Caddy Compose stack. The public Host allowlist remains the reverse proxy's responsibility. Never rely on `X-Forwarded-For` for caller identity. Tests are written but not executed.
