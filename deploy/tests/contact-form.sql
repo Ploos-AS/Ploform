@@ -56,7 +56,7 @@ WHERE organization_id=:'org_id' AND id=:'form_id'
   AND status='draft'
   AND EXISTS (SELECT 1 FROM form_versions
               WHERE organization_id=:'org_id' AND form_id=:'form_id');
-DO $
+DO $$
 BEGIN
  IF (SELECT status FROM forms WHERE slug='contact') <> 'published' THEN
   RAISE EXCEPTION 'versioned contact form was not published';
@@ -64,14 +64,14 @@ BEGIN
  IF (SELECT status FROM forms WHERE slug='unversioned') <> 'draft' THEN
   RAISE EXCEPTION 'unversioned form was published';
  END IF;
-END $;
+END $$;
 -- Repeated publication must not change the already-published form.
 UPDATE forms SET status='published'
 WHERE organization_id=:'org_id' AND id=:'form_id' AND status='draft';
-DO $
+DO $$
 BEGIN
  IF FOUND THEN RAISE EXCEPTION 'published form accepted duplicate transition'; END IF;
-END $;
+END $$;
 
 ROLLBACK;
 \echo 'Transactional contact form persistence and publication checks passed'
