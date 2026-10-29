@@ -10,6 +10,9 @@ func TestValidate(t *testing.T) {
   {"unknown type", Schema{Fields: []Field{{ID:"a", Type:"upload", Label:"File"}}}, false},
   {"duplicate ids", Schema{Fields: []Field{{ID:"a", Type:"text", Label:"One"},{ID:"a", Type:"text", Label:"Two"}}}, false},
   {"select missing options", Schema{Fields: []Field{{ID:"a", Type:"select", Label:"Choice"}}}, false},
+  {"empty label", Schema{Fields: []Field{{ID:"a", Type:"text"}}}, false},
+  {"duplicate choices", Schema{Fields: []Field{{ID:"a", Type:"select", Label:"Choice", Options:[]string{"A","A"}}}}, false},
+  {"unexpected choices", Schema{Fields: []Field{{ID:"a", Type:"text", Label:"Name", Options:[]string{"A"}}}}, false},
   {"invalid id", Schema{Fields: []Field{{ID:"Bad ID", Type:"text", Label:"Name"}}}, false},
  }
  for _, tc := range cases {
