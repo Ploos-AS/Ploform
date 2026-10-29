@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS submissions;
+DROP TABLE IF EXISTS form_versions;
+DROP TABLE IF EXISTS forms;
+DROP TABLE IF EXISTS workspaces;
+DROP TABLE IF EXISTS organizations;
