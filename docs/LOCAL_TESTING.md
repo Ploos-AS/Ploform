@@ -34,6 +34,7 @@ psql -v ON_ERROR_STOP=1 -f backend/migrations/000004_sessions.up.sql
 psql -v ON_ERROR_STOP=1 -f backend/migrations/000005_auth_role.up.sql
 psql -v ON_ERROR_STOP=1 -f backend/tests/auth_role_isolation.sql
 psql -v ON_ERROR_STOP=1 -f backend/tests/tenant_isolation.sql
+psql -v ON_ERROR_STOP=1 -f backend/tests/workspace_access.sql
 ```
 
 These scripts assume an empty disposable database. They do not test
