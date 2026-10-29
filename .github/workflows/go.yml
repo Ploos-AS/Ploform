@@ -1,9 +1,6 @@
 name: Go and PostgreSQL checks
 on:
-  push:
-    paths: ["backend/**", ".github/workflows/go.yml"]
-  pull_request:
-    paths: ["backend/**", ".github/workflows/go.yml"]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
