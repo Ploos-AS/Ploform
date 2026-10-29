@@ -24,6 +24,7 @@ func handlerWithDatabases(db, authDB *sql.DB) http.Handler {
 	mux.HandleFunc("GET /api/templates/contact", contactTemplateHandler)
 	if db != nil {
 		mux.Handle("GET /api/public/organizations/{organizationID}/workspaces/{workspaceSlug}/forms/{formSlug}", publicFormHandler(store.Store{DB: db}))
+		mux.Handle("GET /f/{organizationID}/{workspaceSlug}/{formSlug}", publicFormPageHandler(store.Store{DB: db}))
 	}
 	if db != nil && authDB != nil {
 		sessions := session.Repository{DB: authDB}
