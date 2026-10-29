@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Ploos-AS/Ploform/backend/internal/authz"
+	"github.com/Ploos-AS/Ploform/backend/internal/httpauth"
 	"github.com/Ploos-AS/Ploform/backend/internal/session"
 	"github.com/Ploos-AS/Ploform/backend/internal/store"
 )
@@ -33,6 +34,7 @@ func handlerWithDatabases(db, authDB *sql.DB) http.Handler {
 			_ = json.NewEncoder(w).Encode(map[string]string{"user_id": identity.UserID})
 		})
 		mux.Handle("GET /api/organizations/{organizationID}/workspaces", workspaceRoutes(a, store.Store{DB: db}))
+		mux.Handle("POST /api/logout", httpauth.RequireSameOrigin(logoutHandler(sessions)))
 	}
 	mux.Handle("GET /readyz", readinessHandler(db))
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
