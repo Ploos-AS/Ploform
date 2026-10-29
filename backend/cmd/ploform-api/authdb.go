@@ -5,14 +5,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"os"
 	"time"
 )
 
 // connectAuthDatabase must use ploform_auth, never the migration owner.
 // The separate DSN prevents the tenant role from reading identity tables.
 func connectAuthDatabase(ctx context.Context) (*sql.DB, error) {
-	dsn := os.Getenv("PLOFORM_AUTH_DATABASE_URL")
+	dsn, err := databaseDSN("PLOFORM_AUTH_DATABASE_URL", "PLOFORM_AUTH_PASSWORD_FILE", "ploform_auth")
+	if err != nil { return nil, err }
 	if dsn == "" {
 		return nil, errors.New("PLOFORM_AUTH_DATABASE_URL is required")
 	}
