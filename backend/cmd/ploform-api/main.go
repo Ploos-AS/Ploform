@@ -47,6 +47,9 @@ func handlerWithDatabases(db, authDB *sql.DB) http.Handler {
 }
 
 func main() {
+	if err := httpauth.ValidateTrustedProxyCIDRs(os.Getenv("PLOFORM_TRUSTED_PROXY_IPS")); err != nil {
+		log.Fatalf("trusted proxy configuration: %v", err)
+	}
 	addr := os.Getenv("PLOFORM_LISTEN_ADDR")
 	if addr == "" {
 		addr = "127.0.0.1:8080"
