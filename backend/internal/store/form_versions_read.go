@@ -5,7 +5,6 @@ import (
  "database/sql"
  "encoding/json"
 
- "github.com/Ploos-AS/Ploform/backend/internal/formschema"
 )
 
 func (s Store) ListFormVersions(ctx context.Context, orgID, formID string) ([]FormVersion, error) {
@@ -26,5 +25,3 @@ func (s Store) ListFormVersions(ctx context.Context, orgID, formID string) ([]Fo
  })
  return result, err
 }
-
-var _ = formschema.Schema{}
