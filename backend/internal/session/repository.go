@@ -17,7 +17,7 @@ type Repository struct {
 }
 
 type Identity struct {
-	UserID string
+	UserID    string
 	ExpiresAt time.Time
 }
 
