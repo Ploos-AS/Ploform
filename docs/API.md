@@ -4,7 +4,7 @@ Ploform is not production-ready. No interactive login exists yet.
 
 ## Endpoints
 
-- `GET /healthz`: process liveness.
+- `GET /api/me`: returns `{"user_id":"uuid"}` for an existing valid session, otherwise HTTP 401. It never creates sessions.\n- `GET /healthz`: process liveness.
 - `GET /readyz`: checks the tenant database connection only.
 - `GET /api/organizations/{organizationID}/workspaces`: requires an authenticated session and verified organization membership.
 
