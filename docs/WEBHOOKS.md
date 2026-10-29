@@ -16,3 +16,7 @@ Ploform will deliver optional signed HTTPS webhooks to destinations such as n8n,
 - Explicit tenant scoping for destination lookup and event dispatch; no cross-tenant fan-out.
 
 **Not implemented:** webhook destination API, delivery worker, outbox persistence, n8n templates or live webhook transport. No form integration is exposed publicly.
+
+## Outbox database foundation (migration 000008)
+
+Migration 000008 introduces tenant-scoped `webhook_destinations` and `webhook_outbox` tables with composite organization foreign keys, forced row-level security, status/attempt scheduling fields, and event deduplication constraints. Outbox rows store event references, not submission answers or signing secrets. The destination URL check is only a basic syntax guard; **it is not SSRF protection**. Destination creation and outbound network delivery must validate HTTPS, DNS resolution, redirects and private address ranges. No delivery worker, retry scheduler, HTTP management API or transactional submission-to-outbox integration exists yet. Migration has not been executed in this session.
