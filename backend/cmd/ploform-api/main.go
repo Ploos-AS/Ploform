@@ -35,6 +35,8 @@ func handlerWithDatabases(db, authDB *sql.DB) http.Handler {
 		})
 		mux.Handle("GET /api/organizations/{organizationID}/workspaces", workspaceRoutes(a, store.Store{DB: db}))
 		mux.Handle("GET /api/organizations/{organizationID}/workspaces/{workspaceID}/forms", formsListRoute(a, store.Store{DB: db}))
+		mux.Handle("GET /api/organizations/{organizationID}/forms/{formID}/versions", httpauth.Middleware(a, authz.ManageForms, func(r *http.Request) string { return r.PathValue("organizationID") }, formVersionsListHandler(store.Store{DB: db})))
+		mux.Handle("POST /api/organizations/{organizationID}/forms/{formID}/versions", httpauth.RequireSameOrigin(requireCSRF(httpauth.WriteMiddleware(a, authz.ManageForms, formVersionsCreateHandler(store.Store{DB: db})))))
 		mux.Handle("GET /api/csrf", csrfTokenHandler(sessions))
 		mux.Handle("POST /api/organizations/{organizationID}/workspaces/{workspaceID}/forms", httpauth.RequireSameOrigin(requireCSRF(httpauth.WriteMiddleware(a, authz.ManageForms, createFormDraftHandler(store.Store{DB: db})))))
 		mux.Handle("POST /api/logout", httpauth.RequireSameOrigin(requireCSRF(logoutHandler(sessions))))
