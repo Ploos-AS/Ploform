@@ -2,11 +2,12 @@ package httpauth
 
 import (
 	"crypto/subtle"
-	"net/http"
 	"net"
+	"net/http"
 	"net/url"
-	"strings"
 	"os"
+	"strconv"
+	"strings"
 )
 
 // RequireSameOrigin rejects cross-origin unsafe requests. This is one
@@ -20,6 +21,10 @@ func RequireSameOrigin(next http.Handler) http.Handler {
 			return
 		}
 		expected := os.Getenv("PLOFORM_PUBLIC_ORIGIN")
+		if expected != "" && !validPublicOrigin(expected) {
+			http.Error(w, "invalid server origin configuration", http.StatusServiceUnavailable)
+			return
+		}
 		if expected == "" && r.TLS == nil {
 			http.Error(w, "HTTPS required", http.StatusForbidden)
 			return
@@ -30,7 +35,7 @@ func RequireSameOrigin(next http.Handler) http.Handler {
 			return
 		}
 		parsed, err := url.Parse(origin)
-		if err != nil || parsed.Scheme != "https" || parsed.Host == "" || parsed.User != nil || parsed.Path != "" || parsed.RawQuery != "" || parsed.Fragment != "" {
+		if err != nil || !validPublicOrigin(origin) {
 			http.Error(w, "invalid origin", http.StatusForbidden)
 			return
 		}
@@ -57,4 +62,19 @@ func RequireSameOrigin(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// validPublicOrigin requires one canonical HTTPS origin without path, query,
+// fragment, credentials or trailing slash. It rejects opaque URLs and ports
+// that are not valid numeric TCP ports.
+func validPublicOrigin(raw string) bool {
+	if raw == "" || strings.TrimSpace(raw) != raw || strings.ContainsAny(raw, ",\\ \t\r\n") { return false }
+	u, err := url.Parse(raw)
+	if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.Opaque != "" || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.RawFragment != "" { return false }
+	if u.Hostname() == "" || strings.HasSuffix(raw, "/") { return false }
+	if port := u.Port(); port != "" {
+		n, err := strconv.Atoi(port)
+		if err != nil || n < 1 || n > 65535 { return false }
+	}
+	return true
 }
