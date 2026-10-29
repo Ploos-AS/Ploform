@@ -5,7 +5,7 @@ set -eu
 cd "$(dirname "$0")/../.."
 compose=deploy/compose.proxy.dev.yaml
 db() {
- docker compose -f "$compose" exec -T postgres psql -X -U ploform_dev -d ploform -v ON_ERROR_STOP=1 -Atc "$1"
+ docker compose -f "$compose" exec -T postgres psql -X -q -U ploform_dev -d ploform -v ON_ERROR_STOP=1 -Atc "$1"
 }
 org_id=$(db "INSERT INTO organizations(slug,name) VALUES ('e2e-' || substr(gen_random_uuid()::text,1,12),'HTTP integration test') RETURNING id")
 cleanup() { db "DELETE FROM organizations WHERE id='$org_id'" >/dev/null || true; }
