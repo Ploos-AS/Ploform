@@ -57,7 +57,7 @@ func main() {
 	// No administrative endpoints exist yet. Fail closed when a database
 	// is configured but unavailable, rather than starting a degraded service.
 	var db *sql.DB
-	if os.Getenv("PLOFORM_DATABASE_URL") != "" {
+	if os.Getenv("PLOFORM_DATABASE_URL") != "" || os.Getenv("PLOFORM_APP_PASSWORD_FILE") != "" {
 		var err error
 		db, err = connectDatabase(context.Background())
 		if err != nil {
@@ -66,7 +66,7 @@ func main() {
 		defer db.Close()
 	}
 	var authDB *sql.DB
-	if os.Getenv("PLOFORM_AUTH_DATABASE_URL") != "" {
+	if os.Getenv("PLOFORM_AUTH_DATABASE_URL") != "" || os.Getenv("PLOFORM_AUTH_PASSWORD_FILE") != "" {
 		if db == nil {
 			log.Fatal("authentication requires PLOFORM_DATABASE_URL")
 		}
