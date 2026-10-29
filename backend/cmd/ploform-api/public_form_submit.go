@@ -3,6 +3,7 @@ package main
 import (
  "errors"
  "net/http"
+ "net"
  "sync"
  "time"
 
@@ -24,6 +25,7 @@ func (l *publicSubmitLimiter) allow(key string) bool {
  // Periodic cleanup bounds memory from stale client addresses.
  if len(l.attempts)>10000 {
   for k,v:=range l.attempts {if len(v)==0||now.Sub(v[len(v)-1])>time.Minute {delete(l.attempts,k)}}
+  if len(l.attempts)>10000 {return false}
  }
  recent:=l.attempts[key][:0]
  for _,t:=range l.attempts[key] {if now.Sub(t)<time.Minute {recent=append(recent,t)}}
@@ -38,7 +40,9 @@ func publicFormSubmitHandler(s store.Store) http.Handler {
   w.Header().Set("Cache-Control","no-store")
   w.Header().Set("X-Content-Type-Options","nosniff")
   w.Header().Set("Content-Security-Policy","default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'")
-  if !limiter.allow(r.RemoteAddr) {http.Error(w,"For mange forsøk. Prøv igjen om litt.",http.StatusTooManyRequests);return}
+  clientIP,_,splitErr:=net.SplitHostPort(r.RemoteAddr)
+  if splitErr!=nil {clientIP=r.RemoteAddr}
+  if !limiter.allow(clientIP) {http.Error(w,"For mange forsøk. Prøv igjen om litt.",http.StatusTooManyRequests);return}
   r.Body=http.MaxBytesReader(w,r.Body,32<<10)
   if err:=r.ParseForm();err!=nil {http.Error(w,"Ugyldig eller for stort skjema.",http.StatusBadRequest);return}
   if r.PostForm.Get("_website")!="" {http.Error(w,"Kunne ikke sende skjemaet.",http.StatusBadRequest);return}
