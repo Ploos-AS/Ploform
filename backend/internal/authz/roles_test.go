@@ -7,9 +7,9 @@ import (
 
 func TestPermissions(t *testing.T) {
 	cases := []struct {
-		role Role
+		role       Role
 		permission Permission
-		want bool
+		want       bool
 	}{
 		{Owner, ManageOrg, true},
 		{Admin, ManageOrg, false},
