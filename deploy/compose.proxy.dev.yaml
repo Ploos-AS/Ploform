@@ -1,0 +1,58 @@
+# Internal-only integration scaffold; no public ports or production secrets.
+# Start: docker compose -f deploy/compose.proxy.dev.yaml up --build
+# Inspect: docker compose -f deploy/compose.proxy.dev.yaml exec caddy wget -qO- http://api:8080/healthz
+# This does NOT run migrations, configure auth roles, or enable login.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ploform_dev
+      POSTGRES_PASSWORD: ${PLOFORM_DEV_POSTGRES_PASSWORD:?Set a development-only password}
+      POSTGRES_DB: ploform
+    volumes:
+      - ploform_dev_pg:/var/lib/postgresql/data
+    networks: [db]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  api:
+    build:
+      context: ../backend
+    environment:
+      PLOFORM_LISTEN_ADDR: "0.0.0.0:8080"
+      PLOFORM_PUBLIC_ORIGIN: "https://forms.example.invalid"
+      PLOFORM_TRUSTED_PROXY_IPS: "172.30.90.2/32"
+      # Database connection is intentionally omitted until migrations,
+      # restricted roles and secrets are provisioned.
+    networks:
+      proxy:
+        ipv4_address: 172.30.90.3
+      db: {}
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+  caddy:
+    image: caddy:2-alpine
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]
+    volumes:
+      - ./caddy/Caddyfile.dev:/etc/caddy/Caddyfile:ro
+    networks:
+      proxy:
+        ipv4_address: 172.30.90.2
+    read_only: true
+    tmpfs: [/tmp, /config, /data]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    # No ports: service is reachable only inside the Docker network.
+networks:
+  proxy:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.30.90.0/28
+  db:
+    internal: true
+volumes:
+  ploform_dev_pg:
