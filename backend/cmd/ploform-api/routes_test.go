@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -41,9 +42,13 @@ func TestWorkspaceJSONContract(t *testing.T) {
 
 func TestWorkspaceRouteDisabledWithoutBothDatabases(t *testing.T) {
 	path := "/api/organizations/00000000-0000-0000-0000-000000000001/workspaces"
+	db, err := sql.Open("pgx", "postgres://localhost/unused")
+	if err != nil { t.Fatal(err) }
+	defer db.Close()
 	for _, h := range []http.Handler{
 		handlerWithDatabases(nil, nil),
-		handlerWithDatabases(nil, nil),
+		handlerWithDatabases(db, nil),
+		handlerWithDatabases(nil, db),
 	} {
 		rec := httptest.NewRecorder()
 		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
