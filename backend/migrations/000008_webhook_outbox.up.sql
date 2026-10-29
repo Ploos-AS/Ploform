@@ -1,4 +1,7 @@
 -- Tenant-isolated webhook outbox. No network delivery or API is enabled.
+-- Composite FK requires a unique tenant/id pair on submissions.
+ALTER TABLE submissions ADD CONSTRAINT submissions_org_id_unique UNIQUE (organization_id, id);
+
 CREATE TABLE webhook_destinations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -27,9 +30,6 @@ CREATE TABLE webhook_outbox (
   FOREIGN KEY (organization_id, submission_id) REFERENCES submissions(organization_id, id) ON DELETE CASCADE
 );
 CREATE INDEX webhook_outbox_pending_idx ON webhook_outbox (next_attempt_at, id) WHERE status = 'pending';
-
--- Composite FK requires a unique tenant/id pair on submissions.
-ALTER TABLE submissions ADD CONSTRAINT submissions_org_id_unique UNIQUE (organization_id, id);
 
 ALTER TABLE webhook_destinations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE webhook_destinations FORCE ROW LEVEL SECURITY;
