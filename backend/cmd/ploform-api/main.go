@@ -34,6 +34,7 @@ func handlerWithDatabases(db, authDB *sql.DB) http.Handler {
 			_ = json.NewEncoder(w).Encode(map[string]string{"user_id": identity.UserID})
 		})
 		mux.Handle("GET /api/organizations/{organizationID}/workspaces", workspaceRoutes(a, store.Store{DB: db}))
+		mux.Handle("GET /api/organizations/{organizationID}/workspaces/{workspaceID}/forms", formsListRoute(a, store.Store{DB: db}))
 		mux.Handle("GET /api/csrf", csrfTokenHandler(sessions))
 		mux.Handle("POST /api/logout", httpauth.RequireSameOrigin(requireCSRF(logoutHandler(sessions))))
 	}
