@@ -18,14 +18,14 @@ for migration in \
 do
   file="/migrations/${migration}.up.sql"
   [ -r "$file" ] || { echo "Missing migration: $file" >&2; exit 1; }
-  applied="$(psql -X -qAt -v ON_ERROR_STOP=1 -v name="$migration" -c "SELECT 1 FROM ploform_schema_migrations WHERE name = :'name'")"
+  applied="$(psql -X -qAt -v ON_ERROR_STOP=1 -c "SELECT 1 FROM ploform_schema_migrations WHERE name = '$migration'")"
   if [ "$applied" = 1 ]; then
     echo "Already applied: $migration"
     continue
   fi
   echo "Applying $migration"
-  psql -X -v ON_ERROR_STOP=1 -v name="$migration" -1 \
+  psql -X -v ON_ERROR_STOP=1 -1 \
     -f "$file" \
-    -c "INSERT INTO ploform_schema_migrations(name) VALUES (:'name')"
+    -c "INSERT INTO ploform_schema_migrations(name) VALUES ('$migration')"
 done
 echo "Development schema migrations complete"
