@@ -16,7 +16,7 @@ func TrustedProxyPeer(remoteAddr, cidrs string) bool {
  if err != nil { return false }
  peer = peer.Unmap()
  if peer.IsLoopback() { return true }
- if strings.TrimSpace(cidrs) == "" { return false }
+ if strings.TrimSpace(cidrs) == "" || ValidateTrustedProxyCIDRs(cidrs) != nil { return false }
  for _, raw := range strings.Split(cidrs, ",") {
   prefix, err := netip.ParsePrefix(strings.TrimSpace(raw))
   if err != nil { return false } // invalid config must fail closed
