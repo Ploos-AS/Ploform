@@ -2,14 +2,18 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
 	"time"
 )
 
-func handler() http.Handler {
+func handler() http.Handler { return handlerWithDB(nil) }
+
+func handlerWithDB(db *sql.DB) http.Handler {
 	mux := http.NewServeMux()
+	mux.Handle("GET /readyz", readinessHandler(db))
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -25,8 +29,10 @@ func main() {
 	}
 	// No administrative endpoints exist yet. Fail closed when a database
 	// is configured but unavailable, rather than starting a degraded service.
+	var db *sql.DB
 	if os.Getenv("PLOFORM_DATABASE_URL") != "" {
-		db, err := connectDatabase(context.Background())
+		var err error
+		db, err = connectDatabase(context.Background())
 		if err != nil {
 			log.Fatalf("database startup check failed: %v", err)
 		}
@@ -34,7 +40,7 @@ func main() {
 	}
 	server := &http.Server{
 		Addr:              addr,
-		Handler:           handler(),
+		Handler:           handlerWithDB(db),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 	log.Printf("Ploform development API listening on %s", addr)
