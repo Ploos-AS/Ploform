@@ -61,6 +61,8 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000006_login_challenges.up.sql
       - name: Apply encrypted submission schema
         run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000007_encrypted_submissions.up.sql
+      - name: Apply webhook outbox schema
+        run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000008_webhook_outbox.up.sql
       - name: Encrypted submission schema regression
         run: psql -v ON_ERROR_STOP=1 -f backend/tests/encrypted_submissions_schema.sql
       - name: Authentication role privilege regression
