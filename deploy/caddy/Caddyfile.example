@@ -1,0 +1,7 @@
+# Example only. Do not expose the current development API publicly.
+# Replace the hostname and set PLOFORM_PUBLIC_ORIGIN to the exact HTTPS origin.
+# The upstream must bind to loopback on the same host as Caddy.
+forms.example.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8080
+}
