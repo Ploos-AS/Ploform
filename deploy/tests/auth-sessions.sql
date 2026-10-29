@@ -12,32 +12,32 @@ UPDATE sessions SET revoked_at=now() WHERE token_digest=digest('revoked-auth-tes
 SELECT pg_sleep(2);
 SET LOCAL ROLE ploform_auth;
 SELECT CASE WHEN count(*)=1 THEN 'true' ELSE 'false' END AS active_ok FROM sessions
- WHERE user_id=:'user_id' AND revoked_at IS NULL AND expires_at>now() \gset
+ WHERE user_id=:'user_id' AND revoked_at IS NULL AND expires_at>clock_timestamp() \gset
 \if :active_ok
 \else
 \echo 'Active session visibility failed'
-\quit 1
+SELECT 1/0; -- fail the test under ON_ERROR_STOP
 \endif
 SELECT CASE WHEN count(*)=0 THEN 'true' ELSE 'false' END AS expired_denied FROM sessions
- WHERE token_digest=digest('expired-auth-test','sha256') AND revoked_at IS NULL AND expires_at>now() \gset
+ WHERE token_digest=digest('expired-auth-test','sha256') AND revoked_at IS NULL AND expires_at>clock_timestamp() \gset
 \if :expired_denied
 \else
 \echo 'Expired session accepted'
-\quit 1
+SELECT 1/0; -- fail the test under ON_ERROR_STOP
 \endif
 SELECT CASE WHEN count(*)=0 THEN 'true' ELSE 'false' END AS revoked_denied FROM sessions
- WHERE token_digest=digest('revoked-auth-test','sha256') AND revoked_at IS NULL AND expires_at>now() \gset
+ WHERE token_digest=digest('revoked-auth-test','sha256') AND revoked_at IS NULL AND expires_at>clock_timestamp() \gset
 \if :revoked_denied
 \else
 \echo 'Revoked session accepted'
-\quit 1
+SELECT 1/0; -- fail the test under ON_ERROR_STOP
 \endif
 SELECT CASE WHEN count(*)=1 THEN 'true' ELSE 'false' END AS membership_ok FROM organization_memberships
  WHERE user_id=:'user_id' AND organization_id=:'org_id' AND role='viewer' \gset
 \if :membership_ok
 \else
 \echo 'Membership lookup failed'
-\quit 1
+SELECT 1/0; -- fail the test under ON_ERROR_STOP
 \endif
 ROLLBACK;
 \echo 'Transactional auth session lifecycle checks passed'
