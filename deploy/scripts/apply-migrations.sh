@@ -14,7 +14,8 @@ for migration in \
   000005_auth_role \
   000006_login_challenges \
   000007_encrypted_submissions \
-  000008_webhook_outbox
+  000008_webhook_outbox \
+  000009_auth_challenge_verification
 do
   file="/migrations/${migration}.up.sql"
   [ -r "$file" ] || { echo "Missing migration: $file" >&2; exit 1; }
