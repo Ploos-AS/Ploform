@@ -17,7 +17,10 @@ type Store struct {
 }
 
 type Workspace struct {
-	ID, OrganizationID, Slug, Name string
+	ID             string `json:"id"`
+	OrganizationID string `json:"organization_id"`
+	Slug           string `json:"slug"`
+	Name           string `json:"name"`
 }
 
 func ValidateSlug(slug string) error {
