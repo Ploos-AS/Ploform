@@ -70,3 +70,7 @@ submissions at application or browser level.
 ## Internal encrypted submission persistence
 
 `backend/internal/store/encrypted_submissions.go` introduces `SaveSensitiveSubmission`, which encrypts a supplied payload before opening a tenant-scoped database transaction. It inserts an AES-256-GCM envelope into `submissions.encrypted_payload` and an empty object into `response_json`. The INSERT joins the authorized organization, form and form version to prevent mismatched authenticated context. The method is **not exposed through HTTP** and relies on the caller having verified authorization and on a secure external key provider, neither of which is currently wired. There is no submission read/decrypt path yet. This code and its database integration have not been test-executed.
+
+## Internal encrypted submission read path
+
+`backend/internal/store/encrypted_submissions_read.go` adds `ReadSensitiveSubmission`. It reads a sensitive-mode envelope in a tenant-scoped transaction, derives the authenticated context from the database row and form-version relationship, then asks the key provider to decrypt. It deliberately does not read confidential-mode submissions, whose client-side keys require a separate design. The caller must have independently authorized `ReadResponses` for the organization. There is no HTTP route, no deployed key manager and no executed integration test. The current `KeyProvider` interface does not itself authenticate callers.
