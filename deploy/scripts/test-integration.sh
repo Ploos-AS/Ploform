@@ -18,3 +18,6 @@ sh deploy/scripts/test-http-submission.sh
 
 printf '\n==> Inbox SQL isolation checks\n'
 docker compose -f deploy/compose.proxy.dev.yaml exec -T postgres psql -X -U ploform_dev -d ploform -v ON_ERROR_STOP=1 -f /dev/stdin < deploy/tests/inbox.sql
+
+printf '\n==> Database authentication session checks\n'
+docker compose -f deploy/compose.proxy.dev.yaml exec -T postgres psql -X -U ploform_dev -d ploform -v ON_ERROR_STOP=1 -f /dev/stdin < deploy/tests/auth-sessions.sql
