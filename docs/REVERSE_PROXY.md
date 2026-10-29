@@ -4,7 +4,7 @@
 
 ## Current state
 
-The repository has a development-only PostgreSQL Compose service and a Go API bound to loopback by default. There is **no production-ready Docker image or supported public deployment** yet. An internal-only Caddy/API/PostgreSQL Compose scaffold is available for development; it deliberately does not publish ports or provision application database roles. `deploy/caddy/Caddyfile.example` is an illustrative template, not a ready-to-deploy configuration.
+The repository has a development-only PostgreSQL Compose service and a Go API bound to loopback by default. There is **no production-ready Docker image or supported public deployment** yet. An internal-only Caddy/API/PostgreSQL Compose scaffold is available for development; it deliberately does not publish ports or provision application database passwords. `deploy/caddy/Caddyfile.example` is an illustrative template, not a ready-to-deploy configuration.
 
 ## Required proxy contract
 
@@ -33,3 +33,7 @@ The trusted-proxy allowlist is applied to the same-origin guard for unsafe reque
 ## Internal-only Compose scaffold
 
 Run `PLOFORM_DEV_POSTGRES_PASSWORD=<strong-development-password> docker compose -f deploy/compose.proxy.dev.yaml up --build` from the repository root. The scaffold starts PostgreSQL, an API without database credentials, and an internal Caddy HTTP proxy. It does **not** initialize database migrations or make the API ready for real submissions. It publishes no host ports. The proxy has a fixed Docker IP, which is configured as the only trusted non-loopback direct peer for the API's unsafe-method origin guard. The private network subnet must not overlap existing Docker networks. The internal Caddyfile is deliberately HTTP-only for smoke testing; it must never be reused for public traffic. No deployment test has been run yet.
+
+## Development database bootstrap
+
+The internal Compose scaffold now starts a one-shot `migrate` service after PostgreSQL is healthy. `deploy/scripts/apply-migrations.sh` applies migrations 000001–000008 in order and records each completed migration in `ploform_schema_migrations`. Each SQL file and its history insert run in a single transaction. The API waits for successful migration completion, but intentionally starts without application DB credentials. The SQL creates restricted roles without passwords; this is **not** a production role provisioning mechanism. This bootstrap assumes a fresh or previously bootstrapped disposable development database: it does not detect out-of-band schema changes, verify migration checksums, or support concurrent migration runners. No Compose or PostgreSQL execution has been performed in this session.
