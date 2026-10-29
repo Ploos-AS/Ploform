@@ -29,6 +29,7 @@ func TestSensitiveRoutesFailClosedWithoutBothDatabases(t *testing.T) {
         {"GET", "/api/organizations/" + org + "/workspaces/" + workspace + "/forms"},
         {"POST", "/api/organizations/" + org + "/workspaces/" + workspace + "/forms"},
         {"GET", "/api/organizations/" + org + "/forms/" + form + "/versions"},
+        {"GET", "/api/organizations/" + org + "/forms/" + form + "/submissions"},
         {"POST", "/api/organizations/" + org + "/forms/" + form + "/versions"},
     }
     configurations := []struct {
