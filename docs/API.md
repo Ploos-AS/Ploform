@@ -4,7 +4,7 @@ Ploform is not production-ready. No interactive login exists yet.
 
 ## Endpoints
 
-- `POST /api/logout`: revokes the current session and clears its cookie. Requires direct HTTPS with matching `Origin`; current origin middleware does not support TLS-terminating reverse proxies. Do not expose publicly until proxy host validation and CSRF protection are completed.\n- `GET /api/me`: returns `{"user_id":"uuid"}` for an existing valid session, otherwise HTTP 401. It never creates sessions.\n- `GET /healthz`: process liveness.
+- `GET /api/csrf`: requires a valid session and returns `{"csrf_token":"..."}` with `Cache-Control: no-store`.\n- `POST /api/logout`: requires `X-CSRF-Token` obtained from `/api/csrf`, in addition to same-origin verification; revokes the current session and clears its cookie. Requires direct HTTPS with matching `Origin`; current origin middleware does not support TLS-terminating reverse proxies. Do not expose publicly until proxy host validation and CSRF protection are completed.\n- `GET /api/me`: returns `{"user_id":"uuid"}` for an existing valid session, otherwise HTTP 401. It never creates sessions.\n- `GET /healthz`: process liveness.
 - `GET /readyz`: checks the tenant database connection only.
 - `GET /api/organizations/{organizationID}/workspaces`: requires an authenticated session and verified organization membership.
 
