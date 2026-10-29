@@ -2,7 +2,6 @@ package httpauth
 
 import (
 	"crypto/subtle"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -43,8 +42,7 @@ func RequireSameOrigin(next http.Handler) http.Handler {
 		// the reverse proxy before accepting public traffic.
 		if expected != "" {
 			if r.TLS == nil {
-				host, _, err := net.SplitHostPort(r.RemoteAddr)
-				if err != nil || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() {
+				if !TrustedProxyPeer(r.RemoteAddr, os.Getenv("PLOFORM_TRUSTED_PROXY_IPS")) {
 					http.Error(w, "trusted local proxy required", http.StatusForbidden)
 					return
 				}
