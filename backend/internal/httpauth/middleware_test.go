@@ -11,10 +11,12 @@ import (
 )
 
 type fakeSessions struct{}
+
 func (fakeSessions) Lookup(context.Context, string) (session.Identity, error) {
 	return session.Identity{UserID: "user-1"}, nil
 }
 type fakeMembers struct{ role authz.Role }
+
 func (f fakeMembers) Resolve(context.Context, string, string) (authz.Role, error) {
 	return f.role, nil
 }
