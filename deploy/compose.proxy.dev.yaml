@@ -36,9 +36,26 @@ services:
     networks: [db]
     security_opt: ["no-new-privileges:true"]
     cap_drop: ["ALL"]
-  api:
+  provision:
+    image: postgres:17-alpine
     depends_on:
       migrate:
+        condition: service_completed_successfully
+    environment:
+      PGHOST: postgres
+      PGUSER: ploform_dev
+      PGPASSWORD: ${PLOFORM_DEV_POSTGRES_PASSWORD:?Set a development-only password}
+      PGDATABASE: ploform
+    secrets: [ploform_app_password, ploform_auth_password]
+    volumes:
+      - ./scripts/provision-roles.sh:/provision-roles.sh:ro
+    entrypoint: ["/bin/sh", "/provision-roles.sh"]
+    networks: [db]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+  api:
+    depends_on:
+      provision:
         condition: service_completed_successfully
     build:
       context: ../backend
@@ -46,8 +63,9 @@ services:
       PLOFORM_LISTEN_ADDR: "0.0.0.0:8080"
       PLOFORM_PUBLIC_ORIGIN: "https://forms.example.invalid"
       PLOFORM_TRUSTED_PROXY_IPS: "172.30.90.2/32"
-      # Database connection remains intentionally omitted: the bootstrap
-      # creates restricted roles but does not provision their passwords.
+      PLOFORM_APP_PASSWORD_FILE: /run/secrets/ploform_app_password
+      PLOFORM_AUTH_PASSWORD_FILE: /run/secrets/ploform_auth_password
+    secrets: [ploform_app_password, ploform_auth_password]
     networks:
       proxy:
         ipv4_address: 172.30.90.3
@@ -78,3 +96,9 @@ networks:
     internal: true
 volumes:
   ploform_dev_pg:
+
+secrets:
+  ploform_app_password:
+    file: ./secrets/app_password.txt
+  ploform_auth_password:
+    file: ./secrets/auth_password.txt
