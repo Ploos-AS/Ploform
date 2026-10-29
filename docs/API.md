@@ -33,3 +33,10 @@ This endpoint is **read-only**. Creating drafts, editing schemas, publishing, pu
 Requires an authenticated session, `forms:manage` membership permission, a matching HTTPS `Origin` and valid `X-CSRF-Token` from `/api/csrf`. Content-Type must be `application/json`; the body is limited to 8192 bytes. Example request body: `{ "slug": "course-feedback", "title": "Course feedback" }`. On success returns HTTP 201 and form metadata with `status: draft`. The workspace must belong to the authorized organization.
 
 This endpoint is mounted in development mode, but has **not** been integration-tested. Do not expose the API publicly. Schema editing, publishing, and submissions remain unimplemented.
+
+## Form versions (experimental)
+
+- `GET /api/organizations/{organizationID}/forms/{formID}/versions`: requires session and `forms:manage`; returns `{ "versions": [...] }`, newest first.
+- `POST /api/organizations/{organizationID}/forms/{formID}/versions`: requires session, `forms:manage`, matching HTTPS `Origin`, and CSRF token. Accepts a JSON schema object, e.g. `{ "fields": [{ "id": "name", "type": "text", "label": "Name", "required": true }] }`. Returns HTTP 201 with the created version. Only draft forms can receive new versions; non-draft forms return 409. Request bodies are limited to 64 KiB.
+
+Both endpoints are development-only and not yet integration-tested. Public form rendering and submissions remain disabled.
