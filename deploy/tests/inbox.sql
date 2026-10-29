@@ -20,7 +20,16 @@ INSERT INTO submissions(organization_id,form_version_id,response_json,created_at
 SET LOCAL ROLE ploform_app;
 SELECT set_config('app.organization_id',:'org_a',true);
 -- Mirrors the store query, including both tenant and form filters.
-DO $ BEGIN END $;
+SELECT CASE WHEN count(*)=2 THEN 'true' ELSE 'false' END AS correct_count
+FROM submissions s
+JOIN form_versions v ON v.id=s.form_version_id AND v.organization_id=s.organization_id
+JOIN forms f ON f.id=v.form_id AND f.organization_id=v.organization_id
+WHERE s.organization_id=:'org_a' AND f.id=:'form_a' \gset
+\if :correct_count
+\else
+\echo 'Inbox form filtering failed'
+\quit 1
+\endif
 DO $$
 BEGIN
  IF (SELECT count(*) FROM submissions) <> 3 THEN
