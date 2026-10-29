@@ -4,7 +4,7 @@ WORKDIR /src
 COPY go.mod ./
 RUN go mod download
 COPY . .
-RUN go mod tidy && CGO_ENABLED=0 go build -trimpath -o /out/ploform-api ./cmd/ploform-api
+RUN CGO_ENABLED=0 go build -trimpath -o /out/ploform-api ./cmd/ploform-api
 
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /out/ploform-api /ploform-api
