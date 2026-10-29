@@ -62,3 +62,7 @@ submissions at application or browser level.
 ## Pluggable key provider boundary
 
 `backend/internal/secureforms/provider.go` defines `KeyProvider.ResolveKey(ctx, organizationID, keyID)` and encryption/decryption helpers. The only adapter currently implemented is `MemoryKeyProvider`, backed by the development-only in-memory keyring. No KMS integration exists yet. Providers must enforce authorization and tenant isolation independently; a caller-provided organization ID is not proof of authorization. The helpers clear the copied key bytes after use, but Go memory copies and runtime behavior prevent any guarantee of complete key erasure. Provider tests are written but not yet executed.
+
+## Database schema (migration 000007)
+
+`submissions` now supports an optional versioned JSON encryption envelope and an `encryption_mode` discriminator. Sensitive and confidential modes require an envelope and an empty legacy `response_json` object. The database validates envelope shape, **not** ciphertext authenticity or the relationship between a key and its organization. Those checks must be performed by the future authorized application layer and key provider. Existing standard-mode rows are unchanged. No encrypted-submission HTTP endpoints exist yet. SQL regression tests are written but not executed.
