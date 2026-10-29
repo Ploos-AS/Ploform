@@ -5,7 +5,6 @@ import (
  "html/template"
  "net/http"
 
- "github.com/Ploos-AS/Ploform/backend/internal/formschema"
  "github.com/Ploos-AS/Ploform/backend/internal/store"
 )
 
@@ -42,9 +41,6 @@ func publicFormPageHandler(s store.Store) http.Handler {
    if errors.Is(err,store.ErrFormNotFound) {http.NotFound(w,r);return}
    http.Error(w,"form unavailable",http.StatusServiceUnavailable);return
   }
-  // All schema field types are checked by GetPublicForm before rendering.
-  // Keep the type reference here to make the shared schema contract explicit.
-  _ = formschema.Schema{}
   w.Header().Set("Content-Type","text/html; charset=utf-8")
   w.Header().Set("Cache-Control","no-store")
   w.Header().Set("X-Content-Type-Options","nosniff")
