@@ -21,3 +21,6 @@ docker compose -f deploy/compose.proxy.dev.yaml exec -T postgres psql -X -U plof
 
 printf '\n==> Database authentication session checks\n'
 docker compose -f deploy/compose.proxy.dev.yaml exec -T postgres psql -X -U ploform_dev -d ploform -v ON_ERROR_STOP=1 -f /dev/stdin < deploy/tests/auth-sessions.sql
+
+printf '\n==> One-time login challenge checks\n'
+docker compose -f deploy/compose.proxy.dev.yaml exec -T postgres psql -X -U ploform_dev -d ploform -v ON_ERROR_STOP=1 -f /dev/stdin < deploy/tests/login-challenges.sql
