@@ -22,6 +22,9 @@ func handlerWithDB(db *sql.DB) http.Handler { return handlerWithDatabases(db, ni
 func handlerWithDatabases(db, authDB *sql.DB) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/templates/contact", contactTemplateHandler)
+	if db != nil {
+		mux.Handle("GET /api/public/organizations/{organizationID}/workspaces/{workspaceSlug}/forms/{formSlug}", publicFormHandler(store.Store{DB: db}))
+	}
 	if db != nil && authDB != nil {
 		sessions := session.Repository{DB: authDB}
 		a := authz.Authorizer{Sessions: sessions, Memberships: authz.MembershipRepository{DB: authDB}}
