@@ -50,3 +50,7 @@ subject lines, routing and other mail metadata are not end-to-end encrypted.
 
 This is a design document, not a claim that Ploform currently encrypts
 submissions at application or browser level.
+
+## Implemented primitive (not connected to storage)
+
+`backend/internal/secureforms/envelope.go` implements AES-256-GCM envelope encryption with a fresh random 96-bit nonce per operation. The authenticated additional data binds organization, form, form version and submission identifiers. Envelope metadata includes a version, algorithm identifier and key ID. The caller supplies a 32-byte key; there is **no key manager, persistent ciphertext storage, HTTP integration or browser-side encryption** yet. Keys must never be generated from passwords or stored in the submission database. Key ID authenticity and key-to-organization binding must be enforced by the future key manager, not trusted from unverified envelope metadata. Unit tests have been written but not executed.
