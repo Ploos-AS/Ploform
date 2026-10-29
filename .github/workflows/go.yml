@@ -57,6 +57,8 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000004_sessions.up.sql
       - name: Apply restricted auth role
         run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000005_auth_role.up.sql
+      - name: Apply login challenge schema
+        run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000006_login_challenges.up.sql
       - name: Authentication role privilege regression
         run: psql -v ON_ERROR_STOP=1 -f backend/tests/auth_role_isolation.sql
       - name: Tenant isolation regression
