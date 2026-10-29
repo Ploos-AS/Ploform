@@ -49,7 +49,7 @@ BEGIN
   END IF;
 END $$;
 -- A tenant must not be able to modify another tenant's rows.
-DO $
+DO $$
 BEGIN
   UPDATE forms SET title = 'Unauthorized modification'
   WHERE slug = 'integration-form';
@@ -60,13 +60,13 @@ BEGIN
   IF FOUND THEN
     RAISE EXCEPTION 'RLS LEAK: tenant B deleted tenant A version';
   END IF;
-END $;
+END $$;
 
 -- INSERT must be rejected by the RLS WITH CHECK policy, not silently accepted.
 -- UUIDs are supplied through session-local settings for use in the DO block.
 SELECT set_config('test.org_a', :'org_a', true);
 SELECT set_config('test.workspace_a', :'workspace_a', true);
-DO $
+DO $$
 DECLARE
   rejected boolean := false;
 BEGIN
@@ -81,7 +81,7 @@ BEGIN
   IF NOT rejected THEN
     RAISE EXCEPTION 'RLS LEAK: cross-tenant INSERT was accepted';
   END IF;
-END $;
+END $$;
 
 INSERT INTO forms (organization_id, workspace_id, slug, title)
 VALUES (:'org_b', :'workspace_b', 'integration-form', 'Integration Form B');
