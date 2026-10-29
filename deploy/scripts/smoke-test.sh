@@ -24,4 +24,5 @@ WHERE rolname IN ('ploform_app', 'ploform_auth')
 SQL
 # Confirm the API reports readiness (database PingContext).
 docker compose -f "$compose" exec -T caddy wget -qO- http://api:8080/readyz >/dev/null
-echo "Internal API and Caddy smoke checks passed"
+docker compose -f "$compose" exec -T postgres psql -X -U ploform_dev -d ploform -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM ploform_schema_migrations" | grep -qx 8
+echo "Internal API, Caddy and migration checks passed"
