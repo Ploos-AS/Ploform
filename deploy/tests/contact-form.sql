@@ -73,5 +73,20 @@ BEGIN
  IF FOUND THEN RAISE EXCEPTION 'published form accepted duplicate transition'; END IF;
 END $$;
 
+-- Persist a response against the published version, still under tenant RLS.
+INSERT INTO submissions (organization_id, form_version_id, response_json)
+SELECT :'org_id', v.id,
+ '{"name":"Ada","email":"ada@example.com","message":"Hei!"}'::jsonb
+FROM form_versions v
+WHERE v.organization_id=:'org_id' AND v.form_id=:'form_id' AND v.version=1;
+DO $$
+BEGIN
+ IF (SELECT count(*) FROM submissions) <> 1 THEN
+  RAISE EXCEPTION 'submission was not stored for the tenant';
+ END IF;
+ IF (SELECT response_json->>'email' FROM submissions LIMIT 1) <> 'ada@example.com' THEN
+  RAISE EXCEPTION 'submission response did not persist';
+ END IF;
+END $$;
 ROLLBACK;
-\echo 'Transactional contact form persistence and publication checks passed'
+\echo 'Transactional contact form, publication and submission checks passed'
