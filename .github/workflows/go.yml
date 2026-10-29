@@ -61,3 +61,5 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f backend/tests/auth_role_isolation.sql
       - name: Tenant isolation regression
         run: psql -v ON_ERROR_STOP=1 -f backend/tests/tenant_isolation.sql
+      - name: Workspace membership and RLS regression
+        run: psql -v ON_ERROR_STOP=1 -f backend/tests/workspace_access.sql
