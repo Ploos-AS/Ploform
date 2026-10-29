@@ -17,9 +17,10 @@ label{display:block;font-weight:600;margin:1.2rem 0 .3rem}
 input,textarea,select{box-sizing:border-box;width:100%;font:inherit;padding:.65rem;border:1px solid #888;border-radius:.35rem}
 textarea{min-height:9rem}fieldset{border:0;padding:0;margin:1rem 0}
 button{font:inherit;padding:.7rem 1.3rem;cursor:pointer}
-small{display:block;margin-top:.5rem}
+small{display:block;margin-top:.5rem}.trap{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
 </style></head><body><main><h1>{{.Title}}</h1>
 <form method="post" action="" accept-charset="utf-8">
+<div class="trap" aria-hidden="true"><label for="company-website">Nettside (la stå tomt)</label><input id="company-website" name="_website" tabindex="-1" autocomplete="off"></div>
 {{range .Schema.Fields}}
 {{if eq .Type "checkbox"}}<label><input style="width:auto" type="checkbox" name="{{.ID}}" {{if .Required}}required{{end}}> {{.Label}}</label>
 {{else}}
@@ -30,8 +31,7 @@ small{display:block;margin-top:.5rem}
 {{else}}<input id="field-{{.ID}}" name="{{.ID}}" type="{{.Type}}" {{if .Required}}required{{end}}>{{end}}
 {{end}}{{end}}
 <p><small>Felter merket * er obligatoriske.</small></p>
-<button type="submit" disabled aria-disabled="true">Send melding (kommer snart)</button>
-<p role="status">Innsending er ikke aktivert ennå.</p>
+<button type="submit">Send melding</button>
 </form></main></body></html>`))
 
 func publicFormPageHandler(s store.Store) http.Handler {
@@ -44,7 +44,7 @@ func publicFormPageHandler(s store.Store) http.Handler {
   w.Header().Set("Content-Type","text/html; charset=utf-8")
   w.Header().Set("Cache-Control","no-store")
   w.Header().Set("X-Content-Type-Options","nosniff")
-  w.Header().Set("Content-Security-Policy","default-src 'none'; style-src 'unsafe-inline'; form-action 'none'; base-uri 'none'; frame-ancestors 'none'")
+  w.Header().Set("Content-Security-Policy","default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'")
   if err:=publicFormPage.Execute(w,form);err!=nil {return}
  })
 }
