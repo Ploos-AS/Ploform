@@ -31,5 +31,10 @@ func connectDatabase(ctx context.Context) (*sql.DB, error) {
 		_ = db.Close()
 		return nil, fmt.Errorf("ping database: %w", err)
 	}
+	var currentUser string
+	if err := db.QueryRowContext(ctx, "SELECT current_user").Scan(&currentUser); err != nil || currentUser != "ploform_app" {
+		_ = db.Close()
+		return nil, errors.New("application database must connect as ploform_app")
+	}
 	return db, nil
 }
