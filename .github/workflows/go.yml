@@ -56,5 +56,7 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000002_app_role.up.sql
       - name: Apply identity schema
         run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000003_identity.up.sql
+      - name: Apply session schema
+        run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000004_sessions.up.sql
       - name: Tenant isolation regression
         run: psql -v ON_ERROR_STOP=1 -f backend/tests/tenant_isolation.sql
