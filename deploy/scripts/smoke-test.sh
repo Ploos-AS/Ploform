@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run on an operator machine with Docker Compose and curl installed.
+# Run on an operator machine with Docker Compose installed.
 # Internal-only deployment verification; no public exposure.
 set -eu
 cd "$(dirname "$0")/../.."
@@ -9,7 +9,8 @@ command -v docker >/dev/null || { echo "Docker required" >&2; exit 1; }
 for file in deploy/secrets/app_password.txt deploy/secrets/auth_password.txt; do
  [ -s "$file" ] || { echo "Missing $file" >&2; exit 1; }
 done
-docker compose -f "$compose" up --build -d
+docker compose -f "$compose" config --quiet
+docker compose -f "$compose" up --build -d --wait
 [ "$(docker compose -f "$compose" ps -q api)" != "" ]
 # HTTP check from inside Caddy's isolated network (no published ports).
 docker compose -f "$compose" exec -T caddy wget -qO- http://api:8080/healthz | grep -q '"status":"ok"'
