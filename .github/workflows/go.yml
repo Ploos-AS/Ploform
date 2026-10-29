@@ -1,4 +1,4 @@
-name: Go checks
+name: Go and PostgreSQL checks
 on:
   push:
     paths: ["backend/**", ".github/workflows/go.yml"]
@@ -7,7 +7,7 @@ on:
 permissions:
   contents: read
 jobs:
-  test:
+  go:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,9 +17,39 @@ jobs:
           cache: false
       - name: Format
         run: test -z "$(gofmt -l backend)"
-      - name: Test
+      - name: Unit tests
         working-directory: backend
         run: go test ./...
       - name: Vet
         working-directory: backend
         run: go vet ./...
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: ploform_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test-only-ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ploform_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: test-only-ci-password
+      PGDATABASE: ploform_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply initial migration
+        run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000001_initial.up.sql
+      - name: Apply restricted application role
+        run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000002_app_role.up.sql
+      - name: Tenant isolation regression
+        run: psql -v ON_ERROR_STOP=1 -f backend/tests/tenant_isolation.sql
