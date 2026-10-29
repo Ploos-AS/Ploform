@@ -41,6 +41,7 @@ func handlerWithDatabases(db, authDB *sql.DB) http.Handler {
 		})
 		mux.Handle("GET /api/organizations/{organizationID}/workspaces", workspaceRoutes(a, store.Store{DB: db}))
 		mux.Handle("GET /api/organizations/{organizationID}/workspaces/{workspaceID}/forms", formsListRoute(a, store.Store{DB: db}))
+		mux.Handle("GET /app/{organizationID}/forms", formsPageRoute(a))
 		mux.Handle("GET /inbox/{organizationID}/{formID}", inboxPageRoute(a))
 		mux.Handle("GET /api/organizations/{organizationID}/forms/{formID}/submissions", inboxListRoute(a, store.Store{DB: db}))
 		mux.Handle("GET /api/organizations/{organizationID}/forms/{formID}/versions", httpauth.Middleware(a, authz.ManageForms, func(r *http.Request) string { return r.PathValue("organizationID") }, formVersionsListHandler(store.Store{DB: db})))
