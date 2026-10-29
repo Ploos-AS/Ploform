@@ -48,6 +48,41 @@ BEGIN
     RAISE EXCEPTION 'RLS LEAK: tenant B can see tenant A versions';
   END IF;
 END $$;
+-- A tenant must not be able to modify another tenant's rows.
+DO $
+BEGIN
+  UPDATE forms SET title = 'Unauthorized modification'
+  WHERE slug = 'integration-form';
+  IF FOUND THEN
+    RAISE EXCEPTION 'RLS LEAK: tenant B modified tenant A form';
+  END IF;
+  DELETE FROM form_versions WHERE version = 1;
+  IF FOUND THEN
+    RAISE EXCEPTION 'RLS LEAK: tenant B deleted tenant A version';
+  END IF;
+END $;
+
+-- INSERT must be rejected by the RLS WITH CHECK policy, not silently accepted.
+-- UUIDs are supplied through session-local settings for use in the DO block.
+SELECT set_config('test.org_a', :'org_a', true);
+SELECT set_config('test.workspace_a', :'workspace_a', true);
+DO $
+DECLARE
+  rejected boolean := false;
+BEGIN
+  BEGIN
+    INSERT INTO forms (organization_id, workspace_id, slug, title)
+    VALUES (current_setting('test.org_a')::uuid,
+            current_setting('test.workspace_a')::uuid,
+            'forbidden-form', 'Must be rejected');
+  EXCEPTION WHEN insufficient_privilege THEN
+    rejected := true;
+  END;
+  IF NOT rejected THEN
+    RAISE EXCEPTION 'RLS LEAK: cross-tenant INSERT was accepted';
+  END IF;
+END $;
+
 INSERT INTO forms (organization_id, workspace_id, slug, title)
 VALUES (:'org_b', :'workspace_b', 'integration-form', 'Integration Form B');
 DO $$
