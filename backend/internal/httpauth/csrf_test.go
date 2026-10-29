@@ -75,3 +75,12 @@ func TestPinnedOriginBehindLoopbackProxy(t *testing.T) {
 		})
 	}
 }
+
+func TestPublicOriginValidation(t *testing.T) {
+	for _, origin := range []string{"https://forms.example.test", "https://forms.example.test:8443"} {
+		if !validPublicOrigin(origin) { t.Errorf("valid origin rejected: %s", origin) }
+	}
+	for _, origin := range []string{"http://forms.example.test", "https://forms.example.test/", "https://forms.example.test/path", "https://user@forms.example.test"} {
+		if validPublicOrigin(origin) { t.Errorf("invalid origin accepted: %s", origin) }
+	}
+}
