@@ -1,6 +1,11 @@
 #!/bin/sh
-# Development-only bootstrap. Fail closed on any migration error.
+# Development-only migration runner. SQL file + history record are atomic.
 set -eu
+psql -X -v ON_ERROR_STOP=1 -c '
+CREATE TABLE IF NOT EXISTS ploform_schema_migrations (
+  name text PRIMARY KEY,
+  applied_at timestamptz NOT NULL DEFAULT now()
+);'
 for migration in \
   000001_initial \
   000002_app_role \
@@ -13,7 +18,14 @@ for migration in \
 do
   file="/migrations/${migration}.up.sql"
   [ -r "$file" ] || { echo "Missing migration: $file" >&2; exit 1; }
+  applied="$(psql -X -qAt -v ON_ERROR_STOP=1 -v name="$migration" -c "SELECT 1 FROM ploform_schema_migrations WHERE name = :'name'")"
+  if [ "$applied" = 1 ]; then
+    echo "Already applied: $migration"
+    continue
+  fi
   echo "Applying $migration"
-  psql -X -v ON_ERROR_STOP=1 -1 -f "$file"
+  psql -X -v ON_ERROR_STOP=1 -v name="$migration" -1 \
+    -f "$file" \
+    -c "INSERT INTO ploform_schema_migrations(name) VALUES (:'name')"
 done
 echo "Development schema migrations complete"
