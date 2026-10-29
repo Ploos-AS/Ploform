@@ -3,6 +3,7 @@ package httpauth
 import (
 	"crypto/subtle"
 	"net/http"
+	"net"
 	"net/url"
 	"strings"
 	"os"
@@ -36,6 +37,13 @@ func RequireSameOrigin(next http.Handler) http.Handler {
 		// Host must be validated against an operator-configured allowlist at
 		// the reverse proxy before accepting public traffic.
 		if expected != "" {
+			if r.TLS == nil {
+				host, _, err := net.SplitHostPort(r.RemoteAddr)
+				if err != nil || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() {
+					http.Error(w, "trusted local proxy required", http.StatusForbidden)
+					return
+				}
+			}
 			if subtle.ConstantTimeCompare([]byte(origin), []byte(expected)) != 1 {
 				http.Error(w, "cross-origin request denied", http.StatusForbidden)
 				return
