@@ -46,3 +46,32 @@ func TestSameOrigin(t *testing.T) {
 		})
 	}
 }
+
+func TestPinnedOriginBehindLoopbackProxy(t *testing.T) {
+	t.Setenv("PLOFORM_PUBLIC_ORIGIN", "https://forms.example.test")
+	h := RequireSameOrigin(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	for _, tc := range []struct {
+		name, remote, origin string
+		want int
+	}{
+		{"trusted loopback", "127.0.0.1:12345", "https://forms.example.test", 204},
+		{"ipv6 loopback", "[::1]:12345", "https://forms.example.test", 204},
+		{"remote rejected", "192.0.2.5:12345", "https://forms.example.test", 403},
+		{"origin mismatch", "127.0.0.1:12345", "https://other.example.test", 403},
+		{"missing origin", "127.0.0.1:12345", "", 403},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8080/api/logout", nil)
+			r.TLS = nil
+			r.RemoteAddr = tc.remote
+			r.Header.Set("Origin", tc.origin)
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, r)
+			if w.Code != tc.want {
+				t.Fatalf("status %d, want %d", w.Code, tc.want)
+			}
+		})
+	}
+}
