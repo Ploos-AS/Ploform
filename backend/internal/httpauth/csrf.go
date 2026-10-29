@@ -68,13 +68,23 @@ func RequireSameOrigin(next http.Handler) http.Handler {
 // fragment, credentials or trailing slash. It rejects opaque URLs and ports
 // that are not valid numeric TCP ports.
 func validPublicOrigin(raw string) bool {
-	if raw == "" || strings.TrimSpace(raw) != raw || strings.ContainsAny(raw, ",\\ \t\r\n") { return false }
+	if raw == "" || strings.TrimSpace(raw) != raw || strings.Contains(raw, ",") {
+		return false
+	}
 	u, err := url.Parse(raw)
-	if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.Opaque != "" || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.RawFragment != "" { return false }
-	if u.Hostname() == "" || strings.HasSuffix(raw, "/") { return false }
+	if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil ||
+		u.Opaque != "" || u.Path != "" || u.RawQuery != "" ||
+		u.Fragment != "" || u.RawFragment != "" {
+		return false
+	}
+	if u.Hostname() == "" || strings.HasSuffix(raw, "/") {
+		return false
+	}
 	if port := u.Port(); port != "" {
 		n, err := strconv.Atoi(port)
-		if err != nil || n < 1 || n > 65535 { return false }
+		if err != nil || n < 1 || n > 65535 {
+			return false
+		}
 	}
 	return true
 }
