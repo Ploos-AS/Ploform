@@ -1,0 +1,4 @@
+# Internal-only HTTP smoke-test proxy. NOT a production HTTPS config.
+:80 {
+    reverse_proxy api:8080
+}
