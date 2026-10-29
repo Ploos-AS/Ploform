@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -20,7 +21,17 @@ func handlerWithDB(db *sql.DB) http.Handler { return handlerWithDatabases(db, ni
 func handlerWithDatabases(db, authDB *sql.DB) http.Handler {
 	mux := http.NewServeMux()
 	if db != nil && authDB != nil {
-		a := authz.Authorizer{Sessions: session.Repository{DB: authDB}, Memberships: authz.MembershipRepository{DB: authDB}}
+		sessions := session.Repository{DB: authDB}
+		a := authz.Authorizer{Sessions: sessions, Memberships: authz.MembershipRepository{DB: authDB}}
+		mux.HandleFunc("GET /api/me", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Cache-Control", "no-store")
+			cookie, err := r.Cookie(session.CookieName)
+			if err != nil { http.Error(w, "authentication required", http.StatusUnauthorized); return }
+			identity, err := sessions.Lookup(r.Context(), cookie.Value)
+			if err != nil { http.Error(w, "authentication required", http.StatusUnauthorized); return }
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]string{"user_id": identity.UserID})
+		})
 		mux.Handle("GET /api/organizations/{organizationID}/workspaces", workspaceRoutes(a, store.Store{DB: db}))
 	}
 	mux.Handle("GET /readyz", readinessHandler(db))
