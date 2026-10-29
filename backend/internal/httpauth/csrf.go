@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"os"
 )
 
 // RequireSameOrigin rejects cross-origin unsafe requests. This is one
@@ -17,7 +18,8 @@ func RequireSameOrigin(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		if r.TLS == nil {
+		expected := os.Getenv("PLOFORM_PUBLIC_ORIGIN")
+		if expected == "" && r.TLS == nil {
 			http.Error(w, "HTTPS required", http.StatusForbidden)
 			return
 		}
@@ -33,6 +35,14 @@ func RequireSameOrigin(next http.Handler) http.Handler {
 		}
 		// Host must be validated against an operator-configured allowlist at
 		// the reverse proxy before accepting public traffic.
+		if expected != "" {
+			if subtle.ConstantTimeCompare([]byte(origin), []byte(expected)) != 1 {
+				http.Error(w, "cross-origin request denied", http.StatusForbidden)
+				return
+			}
+			next.ServeHTTP(w, r)
+			return
+		}
 		if subtle.ConstantTimeCompare([]byte(parsed.Host), []byte(r.Host)) != 1 {
 			http.Error(w, "cross-origin request denied", http.StatusForbidden)
 			return
