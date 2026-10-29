@@ -17,7 +17,7 @@ func TestPublicFormPageEscapesUntrustedContent(t *testing.T) {
  html:=b.String()
  if strings.Contains(html,"<script>alert(1)</script>") || strings.Contains(html,"<img src=x") {t.Fatal("unescaped content")}
  if !strings.Contains(html,"&lt;script&gt;") || !strings.Contains(html,"required") {t.Fatal("expected escaped content and required field")}
- if !strings.Contains(html,"disabled") {t.Fatal("submission must remain disabled")}
+ if !strings.Contains(html,"Send melding") || !strings.Contains(html,"name=\"_website\"") {t.Fatal("submit and honeypot must be present")}
 }
 
 func TestPublicFormPageUnavailableWithoutDatabase(t *testing.T) {
