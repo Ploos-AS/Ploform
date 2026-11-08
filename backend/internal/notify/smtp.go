@@ -9,6 +9,7 @@ import (
  "fmt"
  "net"
  "net/mail"
+ "mime"
  "net/smtp"
  "strconv"
  "strings"
@@ -59,7 +60,7 @@ func (c SMTPConfig) Send(ctx context.Context, subject, body string) error {
  if err:=client.Rcpt(c.To);err!=nil{return fmt.Errorf("SMTP recipient rejected: %w",err)}
  writer,err:=client.Data();if err!=nil{return fmt.Errorf("SMTP data rejected: %w",err)}
  // Use fixed headers, with no user-controlled recipient or sender headers.
- payload:="From: "+c.From+"\r\nTo: "+c.To+"\r\nSubject: "+encodeSubject(subject)+"\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n"+strings.ReplaceAll(strings.ReplaceAll(body,"\r\n","\n"),"\n","\r\n")
+ payload:="From: "+c.From+"\r\nTo: "+c.To+"\r\nSubject: "+mime.QEncoding.Encode("utf-8",subject)+"\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n"+strings.ReplaceAll(strings.ReplaceAll(body,"\r\n","\n"),"\n","\r\n")
  _,writeErr:=writer.Write([]byte(payload))
  closeErr:=writer.Close()
  if writeErr!=nil{return fmt.Errorf("SMTP write failed: %w",writeErr)}
