@@ -4,7 +4,7 @@
 
 Ploform is an MIT-licensed, self-hostable forms platform developed by **Ploos AS**. It aims to support independent organizations, brands, workspaces and sites from one deployment, while keeping data and permissions properly isolated.
 
-> **Status: early development.** This repository is not production-ready. No public submission endpoint or authentication system is available yet.
+> **Status: early development, not production-ready.** The Go API now contains database-backed public form routes, submission handling, and authenticated administration routes. These are development features, not a production security guarantee.
 
 ## Principles
 
@@ -31,7 +31,9 @@ go run ./cmd/ploform-api
 curl http://localhost:8080/healthz
 ```
 
-The initial API only serves a health endpoint. **Do not expose this scaffold as a production form service.**
+Without a configured database, the API serves health and the contact template; database-backed routes are not enabled. With databases configured, additional development routes are available. **Do not expose this scaffold as a production form service.**
+
+For Ousdal IT, the target is three independent forms (general contact, support, courses) with server-side email notification. **Email delivery is not yet verified as implemented.** Do not embed public forms in production until mail delivery, privacy, and abuse protection have been tested.
 
 ## License
 
