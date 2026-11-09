@@ -26,7 +26,7 @@ func (r MembershipRepository) Resolve(ctx context.Context, userID, orgID string)
 	}
 	var role string
 	err := r.DB.QueryRowContext(ctx,
-		"SELECT role FROM organization_memberships WHERE user_id = $1 AND organization_id = $2",
+		"SELECT role FROM organization_memberships WHERE user_id = $1 AND organization_id = $2 AND status = 'active'",
 		userID, orgID).Scan(&role)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", ErrNoMembership

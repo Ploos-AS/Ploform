@@ -1,5 +1,6 @@
 name: Go and PostgreSQL checks
 on:
+  pull_request:
   workflow_dispatch:
 permissions:
   contents: read
@@ -63,6 +64,12 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000007_encrypted_submissions.up.sql
       - name: Apply webhook outbox schema
         run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000008_webhook_outbox.up.sql
+      - name: Apply authentication challenge verification grants
+        run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000009_auth_challenge_verification.up.sql
+      - name: Apply membership status schema
+        run: psql -v ON_ERROR_STOP=1 -f backend/migrations/000010_membership_status.up.sql
+      - name: Membership status regression
+        run: psql -v ON_ERROR_STOP=1 -f backend/tests/membership_status.sql
       - name: Encrypted submission schema regression
         run: psql -v ON_ERROR_STOP=1 -f backend/tests/encrypted_submissions_schema.sql
       - name: Authentication role privilege regression
