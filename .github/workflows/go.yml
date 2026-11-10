@@ -14,7 +14,12 @@ jobs:
           go-version-file: backend/go.mod
           cache: false
       - name: Format
-        run: test -z "$(gofmt -l backend)"
+        run: |
+          unformatted="$(gofmt -l backend)"
+          if [ -n "$unformatted" ]; then
+            printf 'Unformatted Go files:\n%s\n' "$unformatted"
+            exit 1
+          fi
       - name: Resolve Go dependencies
         working-directory: backend
         run: go mod tidy
